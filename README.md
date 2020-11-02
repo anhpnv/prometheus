@@ -39,41 +39,51 @@ node_filesystem_avail_bytes{device="tmpfs",fstype="tmpfs",mountpoint="/run/snapd
 node_filesystem_avail_bytes{device="tmpfs",fstype="tmpfs",mountpoint="/run/user/1000"} 4.02546688e+08
 ```
 
+### 1.3 Histogram
+Prometheus Histogram là một tần số tích lũy.Histogram có nguồn gốc là counter, cái mà đếm các sự kiện đã xảy ra, một bộ đếm tổng giá trị sự kiện, và bộ đếm khác cho mỗi bucket. Buckets đếm có bao nhiêu lần giá trị sự kiện nhỏ hơn hoặc bằng giá trị bucket(bucket value)
 
-### 1.3 Summary
+* Số lượng bucket và các giá trị bucket được quy định trước trong histogram:
+  * Format của bucket: < basename >_bucket{le="< bound_value >"}
+  * Trong đó < basename > là tên cơ sở của metrics và < bound_value > là ngưỡng quy định của 1 bucket
+  * Mỗi histogram có một bucket < basename >_bucket{le="+Inf"} và giá trị đó bằng giá trị < basename >_count
+* Histogram sử dụng các counter:
+  * < basename >_count là counter đếm số lượng sự kiện xảy ra
+  * < basename >_sum là counter tổng giá trị các sự kiện
+
+
+```bash
+# HELP http_request_duration_seconds request duration histogram
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{le="0.5"} 0
+http_request_duration_seconds_bucket{le="1"} 1
+http_request_duration_seconds_bucket{le="2"} 2
+http_request_duration_seconds_bucket{le="3"} 3
+http_request_duration_seconds_bucket{le="5"} 3
+http_request_duration_seconds_bucket{le="+Inf"} 3
+http_request_duration_seconds_sum 6
+http_request_duration_seconds_count 3
+```
+### 1.4 Summary
 Summary có chức năng giống với hàm histogram_quantile(), tuy nhiên percentiles được tính toán ở phía client. Summary có nguồn gốc từ count và sum counters(Giống như Histogram) và trả về kết quả là giá trị quantile(phân vị)
 
+Summary được tạo ra từ 2 loại metrics là counter và gauge:
+* < basename >_count là counter đếm số lượng sự kiện xảy ra
+* < basename >_sum là counter tổng giá trị các sự kiện
+
 ```bash
-# HELP prometheus_engine_query_duration_seconds Query timings
-# TYPE prometheus_engine_query_duration_seconds summary
-prometheus_engine_query_duration_seconds{slice="inner_eval",quantile="0.5"} 0.000310732
-prometheus_engine_query_duration_seconds{slice="inner_eval",quantile="0.9"} 0.000508063
-prometheus_engine_query_duration_seconds{slice="inner_eval",quantile="0.99"} 0.000793674
-prometheus_engine_query_duration_seconds_sum{slice="inner_eval"} 6.49343868100001
-prometheus_engine_query_duration_seconds_count{slice="inner_eval"} 15106
+# HELP http_request_duration_seconds request duration summary
+# TYPE http_request_duration_seconds summary
+http_request_duration_seconds{quantile="0.5"} 2
+http_request_duration_seconds{quantile="0.9"} 3
+http_request_duration_seconds{quantile="0.99"} 3
+http_request_duration_seconds_sum 6
+http_request_duration_seconds_count 3
 ```
-
-
-### 1.4 Histogram
-Prometheus Histogram là một tần số tích lũy.Histogram có nguồn gốc là counter, cái mà đếm các sự kiện đã xảy ra, một bộ đếm tổng giá trị sự kiện, và bộ đếm khác cho mỗi bucket. Buckets đếm có bao nhiêu lần giá trị sự kiện nhỏ hơn hoặc bằng giá trị bucket(bucket value)
-```bash
-# HELP prometheus_http_request_duration_seconds Histogram of latencies for HTTP requests.
-# TYPE prometheus_http_request_duration_seconds histogram
-prometheus_http_request_duration_seconds_bucket{handler="/",le="0.1"} 2
-prometheus_http_request_duration_seconds_bucket{handler="/",le="0.2"} 2
-prometheus_http_request_duration_seconds_bucket{handler="/",le="0.4"} 2
-prometheus_http_request_duration_seconds_bucket{handler="/",le="1"} 2
-prometheus_http_request_duration_seconds_bucket{handler="/",le="3"} 2
-prometheus_http_request_duration_seconds_bucket{handler="/",le="8"} 2
-prometheus_http_request_duration_seconds_bucket{handler="/",le="20"} 2
-prometheus_http_request_duration_seconds_bucket{handler="/",le="60"} 2
-prometheus_http_request_duration_seconds_bucket{handler="/",le="120"} 2
-prometheus_http_request_duration_seconds_bucket{handler="/",le="+Inf"} 2
-prometheus_http_request_duration_seconds_sum{handler="/"} 0.016814989
-prometheus_http_request_duration_seconds_count{handler="/"} 2
-```
-
-
+* http_request_duration_seconds_sum = 1s + 2s + 3s = 6s
+* http_request_duration_seconds_count = 3, bởi vì chỉ có 3 request.
+* http_request_duration_seconds{quantile="0.5"} = 2, nghĩa là có 50% số request mà thời gian đợi phản hồi dưới 2s.
+* http_request_duration_seconds{quantile="0.9"} = 3, nghĩa là có 90% số request mà thời gian đợi phản hồi dưới 3s.
+* http_request_duration_seconds{quantile="0.99"} = 3, nghĩa là có 99% số request mà thời gian đợi phản hồi dưới 3s.
 ## 2. PostgreSQL exporter
 PostgreSQL exporter là exporter sử dụng để khai thác thông tin từ database PostgreSQL.
 
@@ -123,7 +133,7 @@ Sau đây là các mode trong CPU:
 - user: Thời gian bỏ ra trong userland
 - system: Thời gian sử dụng trong kernel
 - iowait: Thời gian chờ hệ thống I/O
-- idle: Thời gian nhàn rỗi của CPU
+- idle: Thời gian nhàn rỗi của CPU 
 - irq&softirq: Thời gian service bị gián đoạn
 - guest: Chế độ này được sử dụng khi ta dùng máy ảo VM
 - steal: thời gian khác VMs "đánh cắp" từ CPUs của mình
