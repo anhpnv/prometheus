@@ -17,19 +17,28 @@ node_cpu_seconds_total{cpu="0",mode="iowait"} 679.52
 node_cpu_seconds_total{cpu="0",mode="irq"} 0
 node_cpu_seconds_total{cpu="0",mode="nice"} 25.28
 node_cpu_seconds_total{cpu="0",mode="softirq"} 293.36
+# HELP node_disk_discard_time_seconds_total This is the total number of seconds spent by all discards.
+# TYPE node_disk_discard_time_seconds_total counter
+node_disk_discard_time_seconds_total{device="sda"} 0
+# HELP node_disk_discarded_sectors_total The total number of sectors discarded successfully.
+# TYPE node_disk_discarded_sectors_total counter
+node_disk_discarded_sectors_total{device="sda"} 0
 ```
 ### 1.2 Gauge
-Gague là metric biểu thị giá trị có thể tăng ,giảm tùy ý. 
+Gague biểu thị giá trị có thể tăng ,giảm tùy ý. 
 
-Ví dụ, gauge có thể biểu thị nhiệt độ hiện tại hoặc bộ nhớ hiện tại đang sử dụng, CPU
+Ví dụ, node_filesystem_avail_bytes là một gauge metrics, nó lấy thông tin từ câu lệnh **df**
 ```bash
-# HELP node_cpu_frequency_max_hertz Maximum cpu thread frequency in hertz.
-# TYPE node_cpu_frequency_max_hertz gauge
-node_cpu_frequency_max_hertz{cpu="0"} 3.3e+09
-node_cpu_frequency_max_hertz{cpu="1"} 3.3e+09
-node_cpu_frequency_max_hertz{cpu="2"} 3.3e+09
-node_cpu_frequency_max_hertz{cpu="3"} 3.3e+09
+# HELP node_filesystem_avail_bytes Filesystem space available to non-root users in bytes.
+# TYPE node_filesystem_avail_bytes gauge
+node_filesystem_avail_bytes{device="/dev/sda1",fstype="vfat",mountpoint="/boot/efi"} 5.35801856e+08
+node_filesystem_avail_bytes{device="/dev/sda5",fstype="ext4",mountpoint="/"} 8.9824536576e+11
+node_filesystem_avail_bytes{device="tmpfs",fstype="tmpfs",mountpoint="/run"} 3.99982592e+08
+node_filesystem_avail_bytes{device="tmpfs",fstype="tmpfs",mountpoint="/run/lock"} 5.238784e+06
+node_filesystem_avail_bytes{device="tmpfs",fstype="tmpfs",mountpoint="/run/snapd/ns"} 3.99982592e+08
+node_filesystem_avail_bytes{device="tmpfs",fstype="tmpfs",mountpoint="/run/user/1000"} 4.02546688e+08
 ```
+
 
 ### 1.3 Summary
 Summary có chức năng giống với hàm histogram_quantile(), tuy nhiên percentiles được tính toán ở phía client. Summary có nguồn gốc từ count và sum counters(Giống như Histogram) và trả về kết quả là giá trị quantile(phân vị)
