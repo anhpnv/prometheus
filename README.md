@@ -1,9 +1,11 @@
 # Các câu hỏi
+
 - Nói rõ lại về 4 loại metrics: Gauge, counter, histogram, summary
 - Tìm hiểu về postgreSQL exporter: Cách exporter lấy metrics
 - Tìm hiểu về các mode trong CPU
 
 ## 1. Nói rõ lại về 4 loại metrics: Gauge, counter, histogram, summary
+
 ### 1.1 Counter
 Counter biểu thị giá trị chỉ tăng hoặc reset về 0. 
 
@@ -25,10 +27,12 @@ node_disk_discard_time_seconds_total{device="sda"} 0
 node_disk_discarded_sectors_total{device="sda"} 0
 ```
 ### 1.2 Gauge
+
 Gague biểu thị giá trị có thể tăng ,giảm tùy ý. 
 
 Ví dụ, node_filesystem_avail_bytes là một gauge metrics, nó lấy thông tin từ câu lệnh **df**
 ```bash
+
 # HELP node_filesystem_avail_bytes Filesystem space available to non-root users in bytes.
 # TYPE node_filesystem_avail_bytes gauge
 node_filesystem_avail_bytes{device="/dev/sda1",fstype="vfat",mountpoint="/boot/efi"} 5.35801856e+08
@@ -138,3 +142,34 @@ Sau đây là các mode trong CPU:
 - guest: Chế độ này được sử dụng khi ta dùng máy ảo VM
 - steal: thời gian khác VMs "đánh cắp" từ CPUs của mình
 - nice: mode xét độ ưu tiên tiến trình trong CPU, có giá trị từ -20 tới 20, giá trị càng cao thì độ ưu tiên tiến trình trong CPU càng thấp.
+
+## Exceptions
+
+### Percentile
+
+"Số phân vị Pth là một giá trị mà tại đó nhiều nhất có P% số trường hợp quan sát trong tập dữ liệu có giá trị thấp hơn giá trị này và nhiều nhất là (100 – P)% của trường hợp có giá trị lớn hơn giá trị này".
+
+Hay nói cách khác k<sup>th</sup> percentile là giá trị nằm trong một data set mà chia data thành 2 phần:
+
+1. Phần bé hơn chứa k% 
+2. Phần lớn hơn(phần còn lại của data) chứa (100 - k)%
+
+Để tính giá trị k<sup>th</sup> percentile ta làm như sau:
+
+1. Chọn dãy số từ nhỏ tới lớn
+2. Nhân k% với số lượng dãy số(trong trường hợp này là **n**): index = k * n / 100
+3. Nếu index là số không nguyên, thì làm tròn lên số nguyên gần nhất rồi sang bước 4.Nếu index là số nguyên thì sang bước 5
+4. Tìm thứ tự thứ **index** trong dãy giá trị đã cho. Giá trị tương ứng trong tập dữ liệu chính là k<sup>th</sup> percentile
+5. TÌm thứ tự thứ **index** trong dãy giá trị đã cho. Gía trị tương ứng trong tập dữ liệu là giá trị trung bình của số đó với số tiếp theo liền sau nó trong dãy.
+
+
+Ví dụ, giả sử ta có một dãy các điểm từ bé tới lớn: 
+
+`43, 54, 56, 61, 62, 66, 68, 69, 69, 70, 71, 72, 77, 78, 79, 85, 87, 88, 89, 93, 95, 96, 98, 99, 99.`
+
+Để tìm ra 90<sup>th</sup> percentile trong dãy(có 25 giá trị), ta nhân 90% * 25 = 22.5(index). Làm tròn số gần nhất với nó là 23.
+
+Đếm từ trái sang phải, ta thấy giá trị thứ 23 là 98. Vậy 98 là 90<sup>th</sup> percentile trong dãy này.
+
+Nếu tìm 20<sup>th</sup> percentile trong dãy(có 25 giá trị), ta nhân 20% * 25 = 5(index). Vậy ta có số thứ 5 trong dãy có giá trị: 62. Vì index = 5 là số nguyên, nên 20<sup>th</sup> percentile là giá trị trung bình của (62 + 66)/2 = 64.
+
