@@ -23,12 +23,31 @@ prometheus_rule_evaluation_duration_seconds_sum 1.623860968846092e+06
 prometheus_rule_evaluation_duration_seconds_count 1.112293682e+09
 ```
 
-metric có đuôi là **_sum** và **_count** là metrics counter. **_count** tăng lên mỗi khi sử dụng **observe**, và **_sum** tăng lên bởi giá trị của observation.
+metric có đuôi là **_sum** và **_count** là counter. **_count** tăng lên mỗi khi sử dụng **observe**, và **_sum** tăng lên bởi giá trị của observation.
 
 
 ### 1.4 Histogram
 Histogram 
-Histogram có nhiều điểm giống với metrics summary.Histogram là sự pha trộn của nhiều counters khác nhau.
+Histogram có nhiều điểm giống với metrics summary.Histogram là sự pha trộn của nhiều counters khác nhau. Ví dụ về 1 loại histogram metrics:
+
+```bash
+# HELP prometheus_http_request_duration_seconds Histogram of latencies for HTTP requests.
+# TYPE prometheus_http_request_duration_seconds histogram
+prometheus_http_request_duration_seconds_bucket{handler="/",le="0.1"} 25547
+prometheus_http_request_duration_seconds_bucket{handler="/",le="0.2"} 26688
+prometheus_http_request_duration_seconds_bucket{handler="/",le="0.4"} 27760
+prometheus_http_request_duration_seconds_bucket{handler="/",le="1"} 28641
+prometheus_http_request_duration_seconds_bucket{handler="/",le="3"} 28782
+prometheus_http_request_duration_seconds_bucket{handler="/",le="8"} 28844
+prometheus_http_request_duration_seconds_bucket{handler="/",le="20"} 28855
+prometheus_http_request_duration_seconds_bucket{handler="/",le="60"} 28860
+prometheus_http_request_duration_seconds_bucket{handler="/",le="120"} 28860
+prometheus_http_request_duration_seconds_bucket{handler="/",le="+Inf"} 28860
+prometheus_http_request_duration_seconds_sum{handler="/"} 1863.80491025699
+prometheus_http_request_duration_seconds_count{handler="/"} 28860
+```
+**_sum** và **_count** cơ chế giống với metrics summary
+Điểm nổi bật của loại metrics này chính là các metrics có đuôi "_bucket", nó thể hiện phần histogram thực tế của histogram.Cụ thể hơn, chúng là counter, **le** được gọi là less than(nhỏ hơn hoặc bằng). Vì vậy 26688 requests trong 200ms, 27760 requests trong 400ms và tổng là 28860
 ### 1.5 Làm thế nào để biết được metrics thuộc loại nào?
 
 
@@ -54,7 +73,9 @@ net_conntrack_dialer_conn_closed_total{dialer_name="prometheus"} 0
 net_conntrack_dialer_conn_closed_total{dialer_name="pushgateway"} 0
 ```
 
-Trong đó #HELP sẽ dùng để biết thông tin metrics đang làm gì, #TYPE sẽ chỉ loại metrics của metrics đó, ví dụ metrics net_conntrack_dialer_conn_attempted_total là counter
+Trong đó: 
+- #HELP sẽ dùng để biết thông tin metrics đang làm gì, - 
+- #TYPE sẽ chỉ loại metrics của metrics đó, ví dụ metrics net_conntrack_dialer_conn_attempted_total là counter
 
 Ngoài ra, có một số cách phân biệt cơ bản để rút ra dưới đây:
 - Các metrics có đuôi là total, count, sum thường là counter
